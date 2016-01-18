@@ -65,7 +65,7 @@ main(int argc, char *argv[])
     "Dec"
   };
 
-  printf(1, "%s %o %o:%o:%o %o",
+  printf(1, "%s %d %d:%d:%d UTC %d",
   95:	8b 7c 24 6c          	mov    0x6c(%esp),%edi
   99:	8b 74 24 58          	mov    0x58(%esp),%esi
   9d:	8b 5c 24 5c          	mov    0x5c(%esp),%ebx
@@ -79,7 +79,7 @@ main(int argc, char *argv[])
     "Dec"
   };
 
-  printf(1, "%s %o %o:%o:%o %o",
+  printf(1, "%s %d %d:%d:%d UTC %d",
   b0:	8b 44 84 28          	mov    0x28(%esp,%eax,4),%eax
   b4:	89 7c 24 1c          	mov    %edi,0x1c(%esp)
   b8:	89 74 24 18          	mov    %esi,0x18(%esp)
@@ -707,7 +707,7 @@ printint(int fd, int xx, int base, int sgn)
  465:	ba 00 00 00 00       	mov    $0x0,%edx
  46a:	f7 f3                	div    %ebx
  46c:	89 d0                	mov    %edx,%eax
- 46e:	0f b6 80 40 0b 00 00 	movzbl 0xb40(%eax),%eax
+ 46e:	0f b6 80 44 0b 00 00 	movzbl 0xb44(%eax),%eax
  475:	88 44 0d dc          	mov    %al,-0x24(%ebp,%ecx,1)
   }while((x /= base) != 0);
  479:	8b 75 10             	mov    0x10(%ebp),%esi
@@ -857,7 +857,7 @@ printf(int fd, char *fmt, ...)
  5c7:	83 7d f4 00          	cmpl   $0x0,-0xc(%ebp)
  5cb:	75 09                	jne    5d6 <printf+0x101>
           s = "(null)";
- 5cd:	c7 45 f4 f0 08 00 00 	movl   $0x8f0,-0xc(%ebp)
+ 5cd:	c7 45 f4 f4 08 00 00 	movl   $0x8f4,-0xc(%ebp)
         while(*s != 0){
  5d4:	eb 1e                	jmp    5f4 <printf+0x11f>
  5d6:	eb 1c                	jmp    5f4 <printf+0x11f>
@@ -967,7 +967,7 @@ free(void *ap)
  691:	83 e8 08             	sub    $0x8,%eax
  694:	89 45 f8             	mov    %eax,-0x8(%ebp)
   for(p = freep; !(bp > p && bp < p->s.ptr); p = p->s.ptr)
- 697:	a1 5c 0b 00 00       	mov    0xb5c,%eax
+ 697:	a1 60 0b 00 00       	mov    0xb60,%eax
  69c:	89 45 fc             	mov    %eax,-0x4(%ebp)
  69f:	eb 24                	jmp    6c5 <free+0x3d>
     if(p >= p->s.ptr && (bp > p || bp < p->s.ptr))
@@ -1061,7 +1061,7 @@ free(void *ap)
  75d:	89 10                	mov    %edx,(%eax)
   freep = p;
  75f:	8b 45 fc             	mov    -0x4(%ebp),%eax
- 762:	a3 5c 0b 00 00       	mov    %eax,0xb5c
+ 762:	a3 60 0b 00 00       	mov    %eax,0xb60
 }
  767:	c9                   	leave  
  768:	c3                   	ret    
@@ -1107,7 +1107,7 @@ morecore(uint nu)
  7b2:	89 04 24             	mov    %eax,(%esp)
  7b5:	e8 ce fe ff ff       	call   688 <free>
   return freep;
- 7ba:	a1 5c 0b 00 00       	mov    0xb5c,%eax
+ 7ba:	a1 60 0b 00 00       	mov    0xb60,%eax
 }
  7bf:	c9                   	leave  
  7c0:	c3                   	ret    
@@ -1130,18 +1130,18 @@ malloc(uint nbytes)
  7d0:	83 c0 01             	add    $0x1,%eax
  7d3:	89 45 ec             	mov    %eax,-0x14(%ebp)
   if((prevp = freep) == 0){
- 7d6:	a1 5c 0b 00 00       	mov    0xb5c,%eax
+ 7d6:	a1 60 0b 00 00       	mov    0xb60,%eax
  7db:	89 45 f0             	mov    %eax,-0x10(%ebp)
  7de:	83 7d f0 00          	cmpl   $0x0,-0x10(%ebp)
  7e2:	75 23                	jne    807 <malloc+0x46>
     base.s.ptr = freep = prevp = &base;
- 7e4:	c7 45 f0 54 0b 00 00 	movl   $0xb54,-0x10(%ebp)
+ 7e4:	c7 45 f0 58 0b 00 00 	movl   $0xb58,-0x10(%ebp)
  7eb:	8b 45 f0             	mov    -0x10(%ebp),%eax
- 7ee:	a3 5c 0b 00 00       	mov    %eax,0xb5c
- 7f3:	a1 5c 0b 00 00       	mov    0xb5c,%eax
- 7f8:	a3 54 0b 00 00       	mov    %eax,0xb54
+ 7ee:	a3 60 0b 00 00       	mov    %eax,0xb60
+ 7f3:	a1 60 0b 00 00       	mov    0xb60,%eax
+ 7f8:	a3 58 0b 00 00       	mov    %eax,0xb58
     base.s.size = 0;
- 7fd:	c7 05 58 0b 00 00 00 	movl   $0x0,0xb58
+ 7fd:	c7 05 5c 0b 00 00 00 	movl   $0x0,0xb5c
  804:	00 00 00 
   }
   for(p = prevp->s.ptr; ; prevp = p, p = p->s.ptr){
@@ -1184,14 +1184,14 @@ malloc(uint nbytes)
       }
       freep = prevp;
  857:	8b 45 f0             	mov    -0x10(%ebp),%eax
- 85a:	a3 5c 0b 00 00       	mov    %eax,0xb5c
+ 85a:	a3 60 0b 00 00       	mov    %eax,0xb60
       return (void*)(p + 1);
  85f:	8b 45 f4             	mov    -0xc(%ebp),%eax
  862:	83 c0 08             	add    $0x8,%eax
  865:	eb 38                	jmp    89f <malloc+0xde>
     }
     if(p == freep)
- 867:	a1 5c 0b 00 00       	mov    0xb5c,%eax
+ 867:	a1 60 0b 00 00       	mov    0xb60,%eax
  86c:	39 45 f4             	cmp    %eax,-0xc(%ebp)
  86f:	75 1b                	jne    88c <malloc+0xcb>
       if((p = morecore(nunits)) == 0)

@@ -12281,12 +12281,12 @@ sys_date(void)
 80106481:	83 ec 28             	sub    $0x28,%esp
    struct rtcdate *r;
 
-   if(argptr(1, (void*)&r, sizeof(*r)) < 0)
+   if(argptr(0, (void*)&r, sizeof(*r)) < 0)
 80106484:	c7 44 24 08 18 00 00 	movl   $0x18,0x8(%esp)
 8010648b:	00 
 8010648c:	8d 45 f4             	lea    -0xc(%ebp),%eax
 8010648f:	89 44 24 04          	mov    %eax,0x4(%esp)
-80106493:	c7 04 24 01 00 00 00 	movl   $0x1,(%esp)
+80106493:	c7 04 24 00 00 00 00 	movl   $0x0,(%esp)
 8010649a:	e8 c9 ef ff ff       	call   80105468 <argptr>
 8010649f:	85 c0                	test   %eax,%eax
 801064a1:	79 07                	jns    801064aa <sys_date+0x2c>
