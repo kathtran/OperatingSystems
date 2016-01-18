@@ -27,7 +27,7 @@ main(int argc, char *argv[])
     "Dec"
   };
 
-  printf(1, "%s %d %d:%d:%d UTC %d",
+  printf(2, "%s %d %d:%d:%d UTC %d",
          months[r.month-1], r.day, r.hour, r.minute, r.second, r.year);
 
   exit();

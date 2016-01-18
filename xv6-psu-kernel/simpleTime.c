@@ -52,7 +52,7 @@ main(int argc, char *argv[]) {
     sec = r2.second - r1.second;
   }
 
-  printf(1, "\n%dm%ds\n", min, sec);
+  printf(2, "\n%dm%ds\n", min, sec);
 
   exit();
 }
