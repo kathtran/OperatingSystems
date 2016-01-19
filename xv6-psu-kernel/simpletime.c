@@ -32,7 +32,7 @@ main(int argc, char *argv[]) {
     exit();
   } else if (pid == 0) {  // child
     exec(p[0], p);
-    printf(2, "Error: exec failed. %s probably needs full path\n", p[0]);
+    printf(2, "Error: exec failed. Arg(s) probably needs full path\n");
     exit();
   } else {                // parent
     wait();
@@ -52,7 +52,7 @@ main(int argc, char *argv[]) {
     sec = r2.second - r1.second;
   }
 
-  printf(2, "\n%dm%ds\n", min, sec);
+  printf(1, "\n%dm%ds\n", min, sec);
 
   exit();
 }

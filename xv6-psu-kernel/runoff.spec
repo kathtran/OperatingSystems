@@ -100,3 +100,11 @@ odd: sh.c
 
 even: bootasm.S   # mild preference
 even: bootmain.c  # mild preference
+
+even: date.h
+left: date.h
+even: date.c
+right: date.c
+
+even: simpletime.c
+left: simpletime.c

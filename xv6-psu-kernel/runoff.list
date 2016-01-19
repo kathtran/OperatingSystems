@@ -75,3 +75,7 @@ sh.c
 bootasm.S
 bootmain.c
 
+# project 2
+date.h
+date.c
+simpletime.c

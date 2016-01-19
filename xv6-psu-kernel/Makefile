@@ -170,7 +170,7 @@ UPROGS=\
 	_mkdir\
 	_rm\
 	_sh\
-	_simpleTime\
+	_simpletime\
 	_stressfs\
 	_usertests\
 	_wc\
