@@ -168,6 +168,7 @@ UPROGS=\
 	_ln\
 	_ls\
 	_mkdir\
+  _p2tests\
 	_rm\
 	_sh\
 	_simpletime\
