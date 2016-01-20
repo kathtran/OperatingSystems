@@ -17,7 +17,7 @@ main(int argc, char *argv[]) {
   }
 
   for (i=0; i<argc-1; i++) {
-    p[i] = strcpy(p[i], argv[i+1]);
+    p[i] = argv[i+1];
   }
   p[i] = '\0';
 
@@ -32,7 +32,7 @@ main(int argc, char *argv[]) {
     exit();
   } else if (pid == 0) {  // child
     exec(p[0], p);
-    printf(2, "Error: exec failed. Arg(s) probably needs full path\n");
+    printf(2, "Error: exec failed. %s probably needs full path\n", p[0]);
     exit();
   } else {                // parent
     wait();
