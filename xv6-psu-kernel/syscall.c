@@ -134,7 +134,7 @@ syscall(void)
   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
     proc->tf->eax = syscalls[num]();
     #ifdef PRINT_SYSCALLS
-    static char* syscallnames[] = {
+    static char *syscallnames[] = {
       [SYS_fork]    "fork",
       [SYS_exit]    "exit",
       [SYS_wait]    "wait",
@@ -158,7 +158,7 @@ syscall(void)
       [SYS_close]   "close",
       [SYS_date]    "date"
     };
-    char* syscall = syscallnames[num];
+    char *syscall = syscallnames[num];
     cprintf("%s -> %d\n",
             syscall, proc->tf->eax);
     #endif
