@@ -96,6 +96,10 @@ userinit(void)
   p->tf->esp = PGSIZE;
   p->tf->eip = 0;  // beginning of initcode.S
 
+  // Initialize UID and GID
+  p->uid = UID_DEFAULT;
+  p->gid = GID_DEFAULT;
+
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");
 
@@ -145,6 +149,11 @@ fork(void)
   np->sz = proc->sz;
   np->parent = proc;
   *np->tf = *proc->tf;
+
+  // Copy UID and GID and PPID over
+  np->uid = proc->uid;
+  np->gid = proc->gid;
+  np->ppid = proc->pid;
 
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
@@ -272,25 +281,25 @@ scheduler(void)
     sti();
 
     // Loop over process table looking for process to run.
-    acquire(&ptable.lock);
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->state != RUNNABLE)
+    acquire(&ptable.lock);  // get lock for table
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){  // p incremented by size (int=4;char=1)
+      if(p->state != RUNNABLE)  // not scheduling if not runnable
         continue;
 
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
-      proc = p;
+      proc = p;  // set to process we just hit
       switchuvm(p);
       p->state = RUNNING;
       swtch(&cpu->scheduler, proc->context);
-      switchkvm();
+      switchkvm();  // resumes at this line
 
       // Process is done running for now.
       // It should have changed its p->state before coming back.
       proc = 0;
     }
-    release(&ptable.lock);
+    release(&ptable.lock);  // lock released once table has been gone through once
 
   }
 }
@@ -310,8 +319,8 @@ sched(void)
     panic("sched running");
   if(readeflags()&FL_IF)
     panic("sched interruptible");
-  intena = cpu->intena;
-  swtch(&proc->context, cpu->scheduler);
+  intena = cpu->intena;  // get interrupt name from CPU
+  swtch(&proc->context, cpu->scheduler);  // very important context switch, new process put in place of current one
   cpu->intena = intena;
 }
 

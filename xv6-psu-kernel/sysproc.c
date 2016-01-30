@@ -100,3 +100,45 @@ sys_date(void)
    cmostime(r);
    return 0;
 }
+
+int
+sys_getuid(void)
+{
+  return proc->uid;
+}
+
+int
+sys_getgid(void)
+{
+  return proc->gid;
+}
+
+int
+sys_getppid(void)
+{
+  return proc->ppid;
+}
+
+int
+sys_setuid(void)
+{
+  int uid;
+  struct proc *p;
+
+  if(argint(0, &uid) < 0 || argptr(1, (void*)&p, sizeof(*p)) < 0)
+    return -1;
+  p->uid = uid;
+  return 0;
+}
+
+int
+sys_setgid(void)
+{
+  int gid;
+  struct proc *p;
+
+  if(argint(0, &gid) < 0 || argptr(1, (void*)&p, sizeof(*p)) < 0)
+    return -1;
+  p->gid = gid;
+  return 0;
+}

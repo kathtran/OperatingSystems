@@ -1,6 +1,10 @@
 // Segments in proc->gdt.
 #define NSEGS     7
 
+// Default values for UID and GID.
+#define UID_DEFAULT     0
+#define GID_DEFAULT     0
+
 // Per-CPU state
 struct cpu {
   uchar id;                    // Local APIC ID; index into cpus[] below
@@ -58,6 +62,9 @@ struct proc {
   char *kstack;                // Bottom of kernel stack for this process
   enum procstate state;        // Process state
   int pid;                     // Process ID
+  uint uid;                    // User ID
+  uint gid;                    // Group ID
+  uint ppid;                   // Parent Process ID
   struct proc *parent;         // Parent process
   struct trapframe *tf;        // Trap frame for current syscall
   struct context *context;     // swtch() here to run process

@@ -24,6 +24,11 @@ char* sbrk(int);
 int sleep(int);
 int uptime(void);
 int date(struct rtcdate*);
+int getuid(void);
+int getgid(void);
+int getppid(void);
+int setuid(int);
+int setgid(int);
 
 // ulib.c
 int stat(char*, struct stat*);
