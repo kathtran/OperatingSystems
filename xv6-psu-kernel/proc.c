@@ -6,6 +6,7 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
+#include "uproc.h"
 
 struct {
   struct spinlock lock;
@@ -479,6 +480,7 @@ int
 getProcInfo(int count, struct uproc* table)
 {
   struct proc *p;
+  p = ptable.proc;
 
   table->pid = p->pid;
   table->uid = p->uid;

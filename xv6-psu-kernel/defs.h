@@ -8,6 +8,7 @@ struct rtcdate;
 struct spinlock;
 struct stat;
 struct superblock;
+struct uproc;
 
 // bio.c
 void            binit(void);
@@ -107,6 +108,7 @@ int             pipewrite(struct pipe*, char*, int);
 struct proc*    copyproc(struct proc*);
 void            exit(void);
 int             fork(void);
+int             getProcInfo(int, struct uproc*);
 int             growproc(int);
 int             kill(int);
 void            pinit(void);

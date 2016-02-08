@@ -6,4 +6,4 @@ struct uproc {
   enum procstate state;
   uint sz;
   char *name;
-}
+};
