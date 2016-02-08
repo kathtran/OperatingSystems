@@ -169,12 +169,13 @@ UPROGS=\
 	_ls\
 	_mkdir\
   _p2tests\
+  _p3tests\
+  _ps\
 	_rm\
 	_sh\
 	_simpletime\
 	_stressfs\
 	_usertests\
-  _p3tests\
 	_wc\
 	_zombie\
 
