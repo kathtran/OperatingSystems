@@ -6,6 +6,7 @@
 #include "memlayout.h"
 #include "mmu.h"
 #include "proc.h"
+#include "uproc.h"
 
 int
 sys_fork(void)
@@ -123,11 +124,10 @@ int
 sys_setuid(void)
 {
   int uid;
-  struct proc *p;
 
-  if(argint(0, &uid) < 0 || argptr(1, (void*)&p, sizeof(*p)) < 0)
+  if(argint(0, &uid) < 0)
     return -1;
-  p->uid = uid;
+  proc->uid = uid;
   return 0;
 }
 
@@ -135,10 +135,21 @@ int
 sys_setgid(void)
 {
   int gid;
-  struct proc *p;
 
-  if(argint(0, &gid) < 0 || argptr(1, (void*)&p, sizeof(*p)) < 0)
+  if(argint(0, &gid) < 0)
     return -1;
-  p->gid = gid;
+  proc->gid = gid;
   return 0;
+}
+
+int
+sys_getprocs(void)
+{
+  int max;
+  struct uproc *u;
+
+  if(argint(0, &max) < 0 || argptr(1, (void*)&u, sizeof(*u)) < 0)
+    return -1;
+
+  return getProcInfo(max, u);
 }

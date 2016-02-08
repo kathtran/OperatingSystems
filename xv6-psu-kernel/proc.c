@@ -473,3 +473,22 @@ procdump(void)
     cprintf("\n");
   }
 }
+
+// P3
+int
+getProcInfo(int count, struct uproc* table)
+{
+  struct proc *p;
+
+  table->pid = p->pid;
+  table->uid = p->uid;
+  table->gid = p->gid;
+  table->ppid = p->ppid;
+  table->state = p->state;
+  table->sz = p->sz;
+  table->name = p->name;
+
+  count += 1;
+
+  return count;
+}
