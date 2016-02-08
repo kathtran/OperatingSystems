@@ -1,7 +1,5 @@
 #include "types.h"
 #include "user.h"
-#include "proc.h"
-#include "syscall.h"
 
 #define MAXARGS 10
 
@@ -11,6 +9,8 @@ int
 main(int argc, char *argv[])
 {
   testuidgid();
+
+  exit();
 }
 
 int
@@ -36,5 +36,5 @@ testuidgid(void)
   printf(2, "My parent process is: %d\n", ppid);
   printf(2, "Done!\n");
 
-  return 0;
+  exit();
 }

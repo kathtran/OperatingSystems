@@ -174,6 +174,7 @@ UPROGS=\
 	_simpletime\
 	_stressfs\
 	_usertests\
+  _p3tests\
 	_wc\
 	_zombie\
 
