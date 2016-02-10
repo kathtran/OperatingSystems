@@ -146,10 +146,10 @@ int
 sys_getprocs(void)
 {
   int max;
-  struct uproc *u;
+  struct uproc *table;
 
-  if(argint(0, &max) < 0 || argptr(1, (void*)&u, sizeof(*u)) < 0)
+  if(argint(0, &max) < 0 || argptr(1, (void*)&table, sizeof(*table)) < 0)
     return -1;
 
-  return getProcInfo(max, u);
+  return getProcInfo(max, table);
 }

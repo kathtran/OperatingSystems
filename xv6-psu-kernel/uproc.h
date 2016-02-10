@@ -3,7 +3,7 @@ struct uproc {
   uint uid;
   uint gid;
   uint ppid;
-  enum procstate state;
+  char state[20];
   uint sz;
-  char *name;
+  char name[20];
 };

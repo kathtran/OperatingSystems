@@ -438,6 +438,15 @@ kill(int pid)
   return -1;
 }
 
+static char *states[] = {
+  [UNUSED]    "unused",
+  [EMBRYO]    "embryo",
+  [SLEEPING]  "sleep ",
+  [RUNNABLE]  "runble",
+  [RUNNING]   "run   ",
+  [ZOMBIE]    "zombie"
+};
+
 //PAGEBREAK: 36
 // Print a process listing to console.  For debugging.
 // Runs when user types ^P on console.
@@ -445,14 +454,6 @@ kill(int pid)
 void
 procdump(void)
 {
-  static char *states[] = {
-  [UNUSED]    "unused",
-  [EMBRYO]    "embryo",
-  [SLEEPING]  "sleep ",
-  [RUNNABLE]  "runble",
-  [RUNNING]   "run   ",
-  [ZOMBIE]    "zombie"
-  };
   int i;
   struct proc *p;
   char *state;
@@ -465,7 +466,7 @@ procdump(void)
       state = states[p->state];
     else
       state = "???";
-    cprintf("%d %s %s", p->pid, state, p->name);
+    cprintf("%d %d %d %s %s", p->pid, p->uid, p->gid, state, p->name);
     if(p->state == SLEEPING){
       getcallerpcs((uint*)p->context->ebp+2, pc);
       for(i=0; i<10 && pc[i] != 0; i++)
@@ -480,17 +481,25 @@ int
 getProcInfo(int count, struct uproc* table)
 {
   struct proc *p;
-  p = ptable.proc;
+  char *state;
+  int i = 0;
 
-  table->pid = p->pid;
-  table->uid = p->uid;
-  table->gid = p->gid;
-  table->ppid = p->ppid;
-  table->state = p->state;
-  table->sz = p->sz;
-  table->name = p->name;
+  for(p = ptable.proc; p <&ptable.proc[NPROC] && i <= count; p++){
 
-  count += 1;
+    if(p->state == SLEEPING || p->state == RUNNABLE || p->state == RUNNING) {
+      table[i].pid = p->pid;
+      table[i].uid = p->uid;
+      table[i].gid = p->gid;
+      table[i].ppid = p->ppid;
+      state = states[p->state];
+      safestrcpy(table[i].state, state, sizeof(state));
+      table[i].sz = p->sz;
+      safestrcpy(table[i].name, p->name, sizeof(p->name));
 
-  return count;
+      i++;
+    }
+
+  }
+
+  return i;
 }
