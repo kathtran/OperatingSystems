@@ -11,6 +11,10 @@
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
+// ***** P4 *****
+  struct proc *pReadyList;
+  struct proc *pFreeList;
+// ***** P4 *****
 } ptable;
 
 static struct proc *initproc;
@@ -82,6 +86,10 @@ userinit(void)
   struct proc *p;
   extern char _binary_initcode_start[], _binary_initcode_size[];
   
+  // ***** P4 *****
+  pFreeList = 0;
+  // ***** P4 *****
+  
   p = allocproc();
   initproc = p;
   if((p->pgdir = setupkvm()) == 0)
@@ -105,6 +113,11 @@ userinit(void)
   p->cwd = namei("/");
 
   p->state = RUNNABLE;
+
+  // ***** P4 *****
+  pReadyList = p;
+  p->next = 0;
+  // ***** P4 *****
 }
 
 // Grow current process's memory by n bytes.
