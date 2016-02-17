@@ -8,13 +8,20 @@
 #include "spinlock.h"
 #include "uproc.h"
 
+// ***** P4 *****
+#ifdef USE_CS333_SCHEDULER
+int CountToReset = 5000;
+#endif
+// ***** P4 *****
+
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
-// ***** P4 *****
+#ifdef USE_CS333_SCHEDULER
   struct proc *pReadyList;
   struct proc *pFreeList;
-// ***** P4 *****
+  uint   TimeToReset;       // "Countdown timer"
+#endif
 } ptable;
 
 static struct proc *initproc;
@@ -57,6 +64,12 @@ found:
   // Allocate kernel stack.
   if((p->kstack = kalloc()) == 0){
     p->state = UNUSED;
+  #ifdef USE_CS333_SCHEDULER
+    acquire(&ptable.lock);
+    p->next = ptable.pFreeList;
+    ptable.pFreeList = p;
+    release(&ptable.lock);
+  #endif
     return 0;
   }
   sp = p->kstack + KSTACKSIZE;
@@ -86,9 +99,15 @@ userinit(void)
   struct proc *p;
   extern char _binary_initcode_start[], _binary_initcode_size[];
   
-  // ***** P4 *****
-  pFreeList = 0;
-  // ***** P4 *****
+#ifdef USE_CS333_SCHEDULER
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->state == UNUSED) {
+      p->next = ptable.pFreeList;
+      ptable.pFreeList = p;
+    }
+  }
+  ptable.TimeToReset = CountToReset;
+#endif
   
   p = allocproc();
   initproc = p;
@@ -114,10 +133,10 @@ userinit(void)
 
   p->state = RUNNABLE;
 
-  // ***** P4 *****
-  pReadyList = p;
+#ifdef USE_CS333_SCHEDULER
+  ptable.pReadyList = p;
   p->next = 0;
-  // ***** P4 *****
+#endif
 }
 
 // Grow current process's memory by n bytes.
@@ -285,8 +304,34 @@ wait(void)
 //  - swtch to start running that process
 //  - eventually that process transfers control
 //      via swtch back to the scheduler.
+#ifdef USE_CS333_SCHEDULER
 void
 scheduler(void)
+{
+  struct proc *p;
+
+  for(;;) {
+    // Enable interrupts on this processor.
+    sti();
+
+    // Loop over process table looking for process to run.
+    acquire(&ptable.lock);  // get lock for table
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){  // p incremented by size (int=4;char=1)
+      if(p->state != RUNNABLE) // not scheduling if not runnable
+        continue;
+
+      // Switch to chosen process. It's the process's job to release the lock
+      // and then reacquire it before jumping back to us.
+      proc = p; // set to process we just hit
+      switchuvm(p);
+      
+    }
+    release(&ptable.lock);  // lock released
+  }
+}
+#else
+void
+old_scheduler(void)
 {
   struct proc *p;
 
@@ -317,6 +362,7 @@ scheduler(void)
 
   }
 }
+#endif
 
 // Enter scheduler.  Must hold only ptable.lock
 // and have changed proc->state.
