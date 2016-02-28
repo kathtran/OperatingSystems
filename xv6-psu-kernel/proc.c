@@ -18,7 +18,7 @@ struct {
   struct spinlock lock;
   struct proc proc[NPROC];
 #ifdef USE_CS333_SCHEDULER
-  struct proc *pReadyList;
+  struct proc *pReadyList[3];
   struct proc *pFreeList;
   uint   TimeToReset;       // "Countdown timer"
 #endif
@@ -50,9 +50,17 @@ allocproc(void)
   char *sp;
 
   acquire(&ptable.lock);
+#ifdef USE_CS333_SCHEDULER
+  p = ptable.pFreeList;
+  if (p) {
+    p = ptable.pFreeList->next;
+    p->next = 0;
+    goto found;
+  }
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     if(p->state == UNUSED)
       goto found;
+#endif
   release(&ptable.lock);
   return 0;
 
@@ -66,8 +74,7 @@ found:
     p->state = UNUSED;
   #ifdef USE_CS333_SCHEDULER
     acquire(&ptable.lock);
-    p->next = ptable.pFreeList;
-    ptable.pFreeList = p;
+    putOnFreeList(p);
     release(&ptable.lock);
   #endif
     return 0;
@@ -100,13 +107,15 @@ userinit(void)
   extern char _binary_initcode_start[], _binary_initcode_size[];
   
 #ifdef USE_CS333_SCHEDULER
+  int i;
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->state == UNUSED) {
-      p->next = ptable.pFreeList;
-      ptable.pFreeList = p;
+      putOnFreeList(p);
     }
   }
   ptable.TimeToReset = CountToReset;
+  for (i = 0; i < 3; i++)
+    ptable.pReadyList[i] = 0;
 #endif
   
   p = allocproc();
@@ -134,8 +143,9 @@ userinit(void)
   p->state = RUNNABLE;
 
 #ifdef USE_CS333_SCHEDULER
-  ptable.pReadyList = p;
+  ptable.pReadyList[p->priority] = p;
   p->next = 0;
+  p->priority = 1;
 #endif
 }
 
@@ -177,6 +187,11 @@ fork(void)
     kfree(np->kstack);
     np->kstack = 0;
     np->state = UNUSED;
+#ifdef USE_CS333_SCHEDULER
+    acquire(&ptable.lock);
+    putOnFreeList(np);
+    release(&ptable.lock);
+#endif
     return -1;
   }
   np->sz = proc->sz;
@@ -187,6 +202,8 @@ fork(void)
   np->uid = proc->uid;
   np->gid = proc->gid;
   np->ppid = proc->pid;
+
+  np->priority = 1;
 
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
@@ -276,6 +293,9 @@ wait(void)
         p->kstack = 0;
         freevm(p->pgdir);
         p->state = UNUSED;
+#ifdef USE_CS333_SCHEDULER
+        putOnFreeList(p);
+#endif
         p->pid = 0;
         p->parent = 0;
         p->name[0] = 0;
@@ -390,6 +410,9 @@ yield(void)
 {
   acquire(&ptable.lock);  //DOC: yieldlock
   proc->state = RUNNABLE;
+#ifdef USE_CS333_SCHEDULER
+  putOnReadyList(proc, proc->priority);
+#endif
   sched();
   release(&ptable.lock);
 }
@@ -561,4 +584,58 @@ getProcInfo(int count, struct uproc* table)
   }
 
   return i;
+}
+
+void
+putOnFreeList(struct proc *p)
+{
+  p->next = ptable.pFreeList;
+  ptable.pFreeList = p;
+}
+
+void
+putOnReadyList(struct proc *p, int priority)
+{
+  p->next = ptable.pReadyList[priority];
+  ptable.pReadyList[priority] = p;
+}
+
+void
+removeFromReadyList(struct proc *p, int priority) {
+  struct proc *current;
+
+  current = ptable.pReadyList[priority];
+  if (current == p) {
+    ptable.pReadyList[priority] = p->next;
+    return;
+  }
+  while (current->next) {
+    if (current->next == p) {
+      current = p->next->next;
+      p->next = 0;
+      return;
+    }
+  }
+}
+
+int
+setpq(int pid, int priority)
+{
+  struct proc *p;
+
+  for (p = ptable.proc; p <&ptable.proc[NPROC]; p++) {
+    if (pid == p->pid) {
+      if (p->state == RUNNABLE) {
+        if (priority == p->priority) 
+          return 1;
+        else if (priority > p->priority || priority < p->priority) {
+          removeFromReadyList(p, p->priority);
+          putOnReadyList(p, priority); 
+        } 
+        else 
+          p->priority = priority;
+      }
+    }
+  }
+  return 1;
 }

@@ -115,11 +115,15 @@ void            pinit(void);
 void            procdump(void);
 void            scheduler(void) __attribute__((noreturn));
 void            sched(void);
+int             setpq(int, int);
 void            sleep(void*, struct spinlock*);
 void            userinit(void);
 int             wait(void);
 void            wakeup(void*);
 void            yield(void);
+void            putOnFreeList(struct proc*);
+void            putOnReadyList(struct proc*, int);
+void            removeFromReadyList(struct proc*, int);
 
 // swtch.S
 void            swtch(struct context**, struct context*);

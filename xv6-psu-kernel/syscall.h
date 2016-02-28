@@ -27,3 +27,4 @@
 #define SYS_setuid    26
 #define SYS_setgid    27
 #define SYS_getprocs  28
+#define SYS_setpriority 29

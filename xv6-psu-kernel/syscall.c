@@ -105,6 +105,7 @@ extern int sys_getppid(void);
 extern int sys_setuid(void);
 extern int sys_setgid(void);
 extern int sys_getprocs(void);
+extern int sys_setpriority(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]      sys_fork,
@@ -134,7 +135,8 @@ static int (*syscalls[])(void) = {
 [SYS_getppid]   sys_getppid,
 [SYS_setuid]    sys_setuid,
 [SYS_setgid]    sys_setgid,
-[SYS_getprocs]  sys_getprocs
+[SYS_getprocs]  sys_getprocs,
+[SYS_setpriority] sys_setpriority
 };
 
 void
@@ -147,34 +149,35 @@ syscall(void)
     proc->tf->eax = syscalls[num]();
     #ifdef PRINT_SYSCALLS
     static char *syscallnames[] = {
-      [SYS_fork]      "fork",
-      [SYS_exit]      "exit",
-      [SYS_wait]      "wait",
-      [SYS_pipe]      "pipe",
-      [SYS_read]      "read",
-      [SYS_kill]      "kill",
-      [SYS_exec]      "exec",
-      [SYS_fstat]     "fstat",
-      [SYS_chdir]     "chdir",
-      [SYS_dup]       "dup",
-      [SYS_getpid]    "getpid",
-      [SYS_sbrk]      "sbrk",
-      [SYS_sleep]     "sleep",
-      [SYS_uptime]    "uptime",
-      [SYS_open]      "open",
-      [SYS_write]     "write",
-      [SYS_mknod]     "mknod",
-      [SYS_unlink]    "unlink",
-      [SYS_link]      "link",
-      [SYS_mkdir]     "mkdir",
-      [SYS_close]     "close",
-      [SYS_date]      "date",
-      [SYS_getuid]    "getuid",
-      [SYS_getgid]    "getgid",
-      [SYS_getppid]   "getppid",
-      [SYS_setuid]    "setuid",
-      [SYS_setgid]    "setgid",
-      [SYS_getprocs]  "getprocs"
+      [SYS_fork]        "fork",
+      [SYS_exit]        "exit",
+      [SYS_wait]        "wait",
+      [SYS_pipe]        "pipe",
+      [SYS_read]        "read",
+      [SYS_kill]        "kill",
+      [SYS_exec]        "exec",
+      [SYS_fstat]       "fstat",
+      [SYS_chdir]       "chdir",
+      [SYS_dup]         "dup",
+      [SYS_getpid]      "getpid",
+      [SYS_sbrk]        "sbrk",
+      [SYS_sleep]       "sleep",
+      [SYS_uptime]      "uptime",
+      [SYS_open]        "open",
+      [SYS_write]       "write",
+      [SYS_mknod]       "mknod",
+      [SYS_unlink]      "unlink",
+      [SYS_link]        "link",
+      [SYS_mkdir]       "mkdir",
+      [SYS_close]       "close",
+      [SYS_date]        "date",
+      [SYS_getuid]      "getuid",
+      [SYS_getgid]      "getgid",
+      [SYS_getppid]     "getppid",
+      [SYS_setuid]      "setuid",
+      [SYS_setgid]      "setgid",
+      [SYS_getprocs]    "getprocs",
+      [SYS_setpriority] "setpriority"
     };
     char *syscall = syscallnames[num];
     cprintf("%s -> %d\n",

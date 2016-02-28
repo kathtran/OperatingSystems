@@ -31,6 +31,7 @@ int getppid(void);
 int setuid(int);
 int setgid(int);
 int getprocs(int, struct uproc*);
+int setpriority(int, int);
 
 // ulib.c
 int stat(char*, struct stat*);

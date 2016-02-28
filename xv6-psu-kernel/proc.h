@@ -77,6 +77,7 @@ struct proc {
   char name[16];               // Process name (debugging)
   #ifdef USE_CS333_SCHEDULER
   struct proc *next;           // Next item in ready or free list
+  int priority;                // Priority to be used
   #endif
 };
 
