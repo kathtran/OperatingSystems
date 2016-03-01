@@ -123,7 +123,8 @@ void            wakeup(void*);
 void            yield(void);
 void            putOnFreeList(struct proc*);
 void            putOnReadyList(struct proc*, int);
-void            removeFromReadyList(struct proc*, int);
+void            removeFromReadyList(int priority);
+void            removeSpecificFromReadyList(struct proc*, int);
 
 // swtch.S
 void            swtch(struct context**, struct context*);

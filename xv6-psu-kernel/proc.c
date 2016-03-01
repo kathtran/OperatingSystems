@@ -208,6 +208,7 @@ fork(void)
   np->gid = proc->gid;
   np->ppid = proc->pid;
 
+  // Set default priority for new process
   np->priority = 1;
 
   // Clear %eax so that fork returns 0 in the child.
@@ -223,13 +224,12 @@ fork(void)
   pid = np->pid;
 
   // lock to force the compiler to emit the np->state write last.
-  np->state = RUNNABLE;
-  np->priority = 1;
-#ifdef USE_CS333_SCHEDULER
   acquire(&ptable.lock);
+  np->state = RUNNABLE;
+#ifdef USE_CS333_SCHEDULER
   putOnReadyList(np, np->priority);
-  release(&ptable.lock);
 #endif
+  release(&ptable.lock);
   
   return pid;
 }
@@ -359,6 +359,7 @@ scheduler(void)
         proc = p;  // set to process we just hit
         switchuvm(p);
         p->state = RUNNING;
+        putOnReadyList(p, p->priority);
         swtch(&cpu->scheduler, proc->context);
         switchkvm();  // resumes at this line
 
@@ -485,6 +486,9 @@ sleep(void *chan, struct spinlock *lk)
   // Go to sleep.
   proc->chan = chan;
   proc->state = SLEEPING;
+#ifdef USE_CS333_SCHEDULER
+  removeFromReadyList(proc->priority);
+#endif
   sched();
 
   // Tidy up.
@@ -505,9 +509,14 @@ wakeup1(void *chan)
 {
   struct proc *p;
 
-  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
-    if(p->state == SLEEPING && p->chan == chan)
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+    if(p->state == SLEEPING && p->chan == chan) {
       p->state = RUNNABLE;
+  #ifdef USE_CS333_SCHEDULER
+      putOnReadyList(p, p->priority);
+  #endif
+    }
+  }
 }
 
 // Wake up all processes sleeping on chan.
@@ -532,8 +541,12 @@ kill(int pid)
     if(p->pid == pid){
       p->killed = 1;
       // Wake process from sleep if necessary.
-      if(p->state == SLEEPING)
+      if(p->state == SLEEPING) {
         p->state = RUNNABLE;
+ #ifdef USE_CS333_SCHEDULER
+        putOnReadyList(p, p->priority);
+ #endif
+      }
       release(&ptable.lock);
       return 0;
     }
@@ -631,7 +644,16 @@ putOnReadyList(struct proc *p, int priority)
 }
 
 void
-removeFromReadyList(struct proc *p, int priority) {
+removeFromReadyList(int priority) {
+  struct proc *p;
+
+  p = ptable.pReadyList[priority];
+  ptable.pReadyList[priority] = ptable.pReadyList[priority]->next;
+  p->next = 0;
+}
+
+void
+removeSpecificFromReadyList(struct proc *p, int priority) {
   struct proc *current;
 
   current = ptable.pReadyList[priority];
@@ -659,7 +681,7 @@ setpriority(int pid, int priority)
         if (priority == p->priority) 
           return 1;
         else if (priority > p->priority || priority < p->priority) {
-          removeFromReadyList(p, p->priority);
+          removeSpecificFromReadyList(p, p->priority);
           putOnReadyList(p, priority);
           return 1; 
         }
