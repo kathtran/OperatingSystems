@@ -8,8 +8,6 @@
 #include "spinlock.h"
 #include "uproc.h"
 
-//#define USE_CS333_SCHEDULER 
-
 // ***** P4 *****
 #ifdef USE_CS333_SCHEDULER
 int CountToReset = 5000;
@@ -148,11 +146,11 @@ userinit(void)
   p->state = RUNNABLE;
 
 #ifdef USE_CS333_SCHEDULER
+  p->priority = 1;
   acquire(&ptable.lock);
   ptable.pReadyList[p->priority] = p;
-  p->next = 0;
-  p->priority = 1;
   release(&ptable.lock);
+  p->next = 0;
 #endif
 }
 
@@ -225,9 +223,13 @@ fork(void)
   pid = np->pid;
 
   // lock to force the compiler to emit the np->state write last.
-  acquire(&ptable.lock);
   np->state = RUNNABLE;
+  np->priority = 1;
+#ifdef USE_CS333_SCHEDULER
+  acquire(&ptable.lock);
+  putOnReadyList(np, np->priority);
   release(&ptable.lock);
+#endif
   
   return pid;
 }
@@ -343,7 +345,7 @@ scheduler(void)
     sti();
 
     acquire(&ptable.lock);  // get lock for table
-    for (i = 0; i < sizeof(&ptable.pReadyList); i++) {
+    for (i = 0; i < 3; i++) {
       if (ptable.pReadyList[i] == 0)
         continue;
       else {
@@ -647,7 +649,7 @@ removeFromReadyList(struct proc *p, int priority) {
 }
 
 int
-setpq(int pid, int priority)
+setpriority(int pid, int priority)
 {
   struct proc *p;
 
@@ -658,11 +660,12 @@ setpq(int pid, int priority)
           return 1;
         else if (priority > p->priority || priority < p->priority) {
           removeFromReadyList(p, p->priority);
-          putOnReadyList(p, priority); 
-        } 
-        else 
-          p->priority = priority;
-      }
+          putOnReadyList(p, priority);
+          return 1; 
+        }
+      } 
+      else 
+        p->priority = priority;
     }
   }
   return 1;

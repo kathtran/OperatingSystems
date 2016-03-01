@@ -164,5 +164,5 @@ sys_setpriority(void)
   if (priority < 0 || priority > 2)
     return -1;
 
-  return setpq(pid, priority);
+  return setpriority(pid, priority);
 }
