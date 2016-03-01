@@ -359,7 +359,6 @@ scheduler(void)
         proc = p;  // set to process we just hit
         switchuvm(p);
         p->state = RUNNING;
-        putOnReadyList(p, p->priority);
         swtch(&cpu->scheduler, proc->context);
         switchkvm();  // resumes at this line
 
