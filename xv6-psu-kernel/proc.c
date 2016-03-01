@@ -8,6 +8,8 @@
 #include "spinlock.h"
 #include "uproc.h"
 
+//#define USE_CS333_SCHEDULER 
+
 // ***** P4 *****
 #ifdef USE_CS333_SCHEDULER
 int CountToReset = 5000;
@@ -57,6 +59,7 @@ allocproc(void)
     p->next = 0;
     goto found;
   }
+#else
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     if(p->state == UNUSED)
       goto found;
@@ -107,6 +110,7 @@ userinit(void)
   extern char _binary_initcode_start[], _binary_initcode_size[];
   
 #ifdef USE_CS333_SCHEDULER
+  acquire(&ptable.lock);
   int i;
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->state == UNUSED) {
@@ -116,6 +120,7 @@ userinit(void)
   ptable.TimeToReset = CountToReset;
   for (i = 0; i < 3; i++)
     ptable.pReadyList[i] = 0;
+  release(&ptable.lock);
 #endif
   
   p = allocproc();
@@ -143,9 +148,11 @@ userinit(void)
   p->state = RUNNABLE;
 
 #ifdef USE_CS333_SCHEDULER
+  acquire(&ptable.lock);
   ptable.pReadyList[p->priority] = p;
   p->next = 0;
   p->priority = 1;
+  release(&ptable.lock);
 #endif
 }
 
@@ -329,22 +336,35 @@ void
 scheduler(void)
 {
   struct proc *p;
+  int i;
 
   for(;;) {
     // Enable interrupts on this processor.
     sti();
 
-    // Loop over process table looking for process to run.
     acquire(&ptable.lock);  // get lock for table
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){  // p incremented by size (int=4;char=1)
-      if(p->state != RUNNABLE) // not scheduling if not runnable
+    for (i = 0; i < sizeof(&ptable.pReadyList); i++) {
+      if (ptable.pReadyList[i] == 0)
         continue;
+      else {
+        p = ptable.pReadyList[i];
+        ptable.pReadyList[i] = ptable.pReadyList[i]->next;
+        p->next = 0;
+          
+        // Switch to chosen process.  It is the process's job
+        // to release ptable.lock and then reacquire it
+        // before jumping back to us.
+        proc = p;  // set to process we just hit
+        switchuvm(p);
+        p->state = RUNNING;
+        swtch(&cpu->scheduler, proc->context);
+        switchkvm();  // resumes at this line
 
-      // Switch to chosen process. It's the process's job to release the lock
-      // and then reacquire it before jumping back to us.
-      proc = p; // set to process we just hit
-      switchuvm(p);
-      
+        // Process is done running for now.
+        // It should have changed its p->state before coming back.
+        proc = 0;
+        ptable.TimeToReset--; 
+      }
     }
     release(&ptable.lock);  // lock released
   }
@@ -548,7 +568,8 @@ procdump(void)
       state = states[p->state];
     else
       state = "???";
-    cprintf("%d %d %d %s %s", p->pid, p->uid, p->gid, state, p->name);
+    cprintf("PID: %d  UID: %d  GID: %d  PRIORITY: %d  STATE: %s  NAME: %s",
+             p->pid, p->uid, p->gid, p->priority, state, p->name);
     if(p->state == SLEEPING){
       getcallerpcs((uint*)p->context->ebp+2, pc);
       for(i=0; i<10 && pc[i] != 0; i++)
@@ -596,8 +617,15 @@ putOnFreeList(struct proc *p)
 void
 putOnReadyList(struct proc *p, int priority)
 {
-  p->next = ptable.pReadyList[priority];
-  ptable.pReadyList[priority] = p;
+  struct proc *current;
+
+  current = ptable.pReadyList[priority];
+  while (current->next != 0) {
+    if (current->pid == p->pid)
+      return;
+    current = current->next;
+  }
+  current->next = p;
 }
 
 void
