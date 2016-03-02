@@ -685,9 +685,11 @@ setpriority(int pid, int priority)
           return 1; 
         }
       } 
-      else 
+      else { 
         p->priority = priority;
+        return 1;
+      }
     }
   }
-  return 1;
+  return -1;
 }
