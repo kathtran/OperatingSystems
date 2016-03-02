@@ -601,9 +601,10 @@ getProcInfo(int count, struct uproc* table)
   char *state;
   int i = 0;
 
+  acquire(&ptable.lock);
   for(p = ptable.proc; p <&ptable.proc[NPROC] && i <= count; p++){
 
-    if(p->state == SLEEPING || p->state == RUNNABLE || p->state == RUNNING) {
+    if(p->state == SLEEPING || p->state == RUNNABLE || p->state == RUNNING || p->state == ZOMBIE) {
       table[i].pid = p->pid;
       table[i].uid = p->uid;
       table[i].gid = p->gid;
@@ -612,11 +613,13 @@ getProcInfo(int count, struct uproc* table)
       safestrcpy(table[i].state, state, sizeof(state));
       table[i].sz = p->sz;
       safestrcpy(table[i].name, p->name, sizeof(p->name));
+      table[i].priority = p->priority;
 
       i++;
     }
 
   }
+  release(&ptable.lock);
 
   return i;
 }

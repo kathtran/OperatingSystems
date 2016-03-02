@@ -125,7 +125,7 @@ sys_setuid(void)
 {
   int uid;
 
-  if(argint(0, &uid) < 0)
+  if(argint(0, &uid) < 0 || uid < 0)
     return -1;
   proc->uid = uid;
   return 0;
@@ -136,7 +136,7 @@ sys_setgid(void)
 {
   int gid;
 
-  if(argint(0, &gid) < 0)
+  if(argint(0, &gid) < 0 || gid < 0)
     return -1;
   proc->gid = gid;
   return 0;

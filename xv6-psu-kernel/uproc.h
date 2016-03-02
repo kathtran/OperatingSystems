@@ -6,4 +6,5 @@ struct uproc {
   char state[20];
   uint sz;
   char name[20];
+  int priority;
 };
